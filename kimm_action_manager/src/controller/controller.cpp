@@ -52,9 +52,11 @@ namespace RobotController{
         postureTask_ = std::make_shared<TaskJointPosture>("task-posture", *robot_);
         Vector7d posture_gain;
         if (!issimulation_)
-        	posture_gain << 100., 100., 100., 100., 100., 100., 100.;
+        	posture_gain << 200., 200., 200., 200., 200., 200., 200.;
         else
         	posture_gain << 4000., 4000., 4000., 4000., 4000., 4000., 4000.;
+
+        posture_gain << 200., 200., 200., 200., 200., 200., 200.;
         postureTask_->Kp(posture_gain);
         postureTask_->Kd(2.0*postureTask_->Kp().cwiseSqrt());
 
@@ -109,13 +111,6 @@ namespace RobotController{
         state_.v.tail(7) = v;
         state_.franka.q = q;
         state_.franka.v = v;
-
-        robot_->computeAllTerms(data_, state_.q, state_.v);
-
-        state_.franka.G = robot_->nonLinearEffects(data_).tail(na_-2);
-        state_.franka.M = robot_->mass(data_).bottomRightCorner(na_-2, na_-2);
-        state_.franka.H_ee = robot_->position(data_, robot_->model().getJointId("panda_joint7"));
-
     }
     void HuskyFrankaWrapper::husky_update(const Vector3d& base_pos, const Vector3d& base_vel, const Vector2d& wheel_pos, const Vector2d& wheel_vel){     
         for (int i=0; i<3; i++){
@@ -128,6 +123,13 @@ namespace RobotController{
         }
         state_.husky.q = state_.q.head(5);
         state_.husky.v = state_.v.head(5);
+    }
+    void HuskyFrankaWrapper::compute_all_terms(){
+        robot_->computeAllTerms(data_, state_.q, state_.v);
+
+        state_.franka.G = robot_->nonLinearEffects(data_).tail(na_-2);
+        state_.franka.M = robot_->mass(data_).bottomRightCorner(na_-2, na_-2);
+        state_.franka.H_ee = robot_->position(data_, robot_->model().getJointId("panda_joint7"));
     }
 
     void HuskyFrankaWrapper::compute_default_ctrl(ros::Time time){

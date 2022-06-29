@@ -98,6 +98,7 @@ namespace RobotController{
             void initialize();
             void franka_update(const Vector7d& q, const Vector7d& qdot); 
             void husky_update(const Vector3d& base_pos, const Vector3d& base_vel, const Vector2d& wheel_pos, const Vector2d& wheel_vel);
+            void compute_all_terms();
             
             void compute_default_ctrl(ros::Time time);
             void init_joint_posture_ctrl(ros::Time time);

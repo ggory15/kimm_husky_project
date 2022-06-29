@@ -71,6 +71,8 @@ int main(int argc, char **argv)
     tf::TransformListener listener;
 
     while (ros::ok()){
+        ctrl_->compute_all_terms();
+        
         joint_posture_action_server_->compute(ros::Time::now());
         se3_action_server_->compute(ros::Time::now());
         se3_array_action_server_->compute(ros::Time::now());

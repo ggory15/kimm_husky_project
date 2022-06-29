@@ -45,7 +45,7 @@ class ControlSuiteShell(cmd.Cmd):
     def do_home(self, arg):
         'Go to the home position using joint posture ctrl'
         goal = kimm_action_manager.msg.JointPostureGoal
-        goal.duration = 50.0
+        goal.duration = 5.0
         goal.target_joints = JointState()
         goal.target_joints.position = np.array([0.0, 0.0, 0.0, -1.57, 0.0, 1.57, -1.57/2.0])
         

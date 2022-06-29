@@ -31,6 +31,8 @@ namespace kimm_action_manager
             ROS_ERROR("ForceExampleController: Could not read parameter arm_id");
             return false;
         }
+        ROS_WARN_STREAM(arm_id);
+
         if (!node_handle.getParam("joint_names", joint_names) || joint_names.size() != 7) {
             ROS_ERROR(
                 "ForceExampleController: Invalid or no joint_names parameters provided, aborting "
@@ -38,7 +40,7 @@ namespace kimm_action_manager
             return false;
         }
 
-         auto* model_interface = robot_hw->get<franka_hw::FrankaModelInterface>();
+        auto* model_interface = robot_hw->get<franka_hw::FrankaModelInterface>();
         if (model_interface == nullptr) {
             ROS_ERROR_STREAM("ForceExampleController: Error getting model interface from hardware");
             return false;
@@ -59,7 +61,7 @@ namespace kimm_action_manager
         }
         try {
             state_handle_ = std::make_unique<franka_hw::FrankaStateHandle>(
-                state_interface->getHandle(arm_id + "_robot"));
+                state_interface->getHandle("ns0_panda_robot"));
         } catch (hardware_interface::HardwareInterfaceException& ex) {
             ROS_ERROR_STREAM(
                 "ForceExampleController: Exception getting state handle from interface: " << ex.what());
@@ -78,7 +80,7 @@ namespace kimm_action_manager
             ROS_ERROR_STREAM("ForceExampleController: Exception getting joint handles: " << ex.what());
             return false;
             }
-        }  
+        }
         
         // gripper
         gripper_ac_.waitForServer();
@@ -119,8 +121,6 @@ namespace kimm_action_manager
             gui_joint_msg_.effort[j] = 0.0;
         }
         gui_joint_pub_ = node_handle.advertise<sensor_msgs::JointState>("/" + group_name_ + "/gui/joint_states", 100);
-
-        ROS_WARN_STREAM("Everything is fine");
 
         return true;
     }
@@ -187,6 +187,9 @@ namespace kimm_action_manager
 
         odom_lpf_prev_ = odom_lpf_;
         odom_dot_lpf_prev_ = odom_dot_lpf_;
+
+        wheel_vel_(0) = husky_state_msg_.velocity[1]; // left vel
+        wheel_vel_(1) = husky_state_msg_.velocity[0]; // right vel (not use.)
         
         // HQP update thread    
         if (calculation_mutex_.try_lock())
@@ -208,8 +211,9 @@ namespace kimm_action_manager
                 async_calculation_thread_.join();
             break;
             }
-        }
-        
+        }       
+
+        ctrl_->compute_all_terms();
         joint_posture_action_server_->compute(ros::Time::now());
         se3_action_server_->compute(ros::Time::now());
         se3_array_action_server_->compute(ros::Time::now());
@@ -227,21 +231,21 @@ namespace kimm_action_manager
             }
         }
         
-        // Customizing
-        // robot_mass_(4, 4) *= 6.0;
-        // robot_mass_(5, 5) *= 6.0;
-        // robot_mass_(6, 6) *= 10.0;
+        // // Customizing
+        robot_mass_(4, 4) *= 6.0;
+        robot_mass_(5, 5) *= 6.0;
+        robot_mass_(6, 6) *= 10.0;
         
         franka_torque_ = robot_mass_ * ctrl_->state().franka.acc + robot_nle_;
 
-        // MatrixXd Kd(7, 7);
-        // Kd.setIdentity();
-        // Kd = 2.0 * sqrt(5.0) * Kd;
-        // Kd(5, 5) = 0.2;
-        // Kd(4, 4) = 0.2;
-        // Kd(6, 6) = 0.2; // this is practical term
-        // franka_torque_ -= Kd * dq_filtered_;  
-        // franka_torque_ << this->saturateTorqueRate(franka_torque_, robot_tau_);
+        MatrixXd Kd(7, 7);
+        Kd.setIdentity();
+        Kd = 2.0 * sqrt(5.0) * Kd;
+        Kd(5, 5) = 0.2;
+        Kd(4, 4) = 0.2;
+        Kd(6, 6) = 0.2; // this is practical term
+        franka_torque_ -= Kd * dq_filtered_;  
+        franka_torque_ << this->saturateTorqueRate(franka_torque_, robot_tau_);
 
         husky_qvel_ = ctrl_->state().husky.wheel_vel  * 0.01;//  + husky_qvel_prev_;
         double thes_vel = 5.0;
@@ -303,27 +307,7 @@ namespace kimm_action_manager
     void BasicHuskyFrankaController::asyncCalculationProc(){
         calculation_mutex_.lock();
         
-        wheel_vel_(0) = husky_state_msg_.velocity[1]; // left vel
-        wheel_vel_(1) = husky_state_msg_.velocity[0]; // right vel (not use.)
-
-        tf::Transform transform;
-        tf::Quaternion q;
-        transform.setOrigin( tf::Vector3(odom_lpf_(0), odom_lpf_(1), 0.0 ));
-        q.setRPY(0, 0, odom_lpf_(2));
-        transform.setRotation(q);
-        br_->sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", group_name_ + "_rviz_base_link"));
         
-        gui_joint_msg_.header.stamp = ros::Time::now();
-        gui_joint_msg_.position[0] = husky_state_msg_.position[1];
-        gui_joint_msg_.position[1] = husky_state_msg_.position[0];
-        gui_joint_msg_.position[2] = husky_state_msg_.position[1];
-        gui_joint_msg_.position[3] = husky_state_msg_.position[0];
-
-        // Franka update    
-        for (int i=0; i<7; i++){
-            gui_joint_msg_.position[i+4] = franka_q_(i);
-        }
-        gui_joint_pub_.publish(gui_joint_msg_);
 
         ctrl_->husky_update(odom_lpf_, odom_dot_lpf_, Vector2d::Zero(), wheel_vel_);
         ctrl_->franka_update(franka_q_, dq_filtered_);
