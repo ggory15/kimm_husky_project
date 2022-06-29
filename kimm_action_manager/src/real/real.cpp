@@ -9,7 +9,7 @@
 #include <franka/robot_state.h>
 #include <pinocchio/parsers/urdf.hpp>
 
-namespace kimm_husky_controllers
+namespace kimm_action_manager
 {
     bool BasicHuskyFrankaController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& node_handle)
     {
@@ -38,7 +38,7 @@ namespace kimm_husky_controllers
             return false;
         }
 
-        auto* model_interface = robot_hw->get<franka_hw::FrankaModelInterface>();
+         auto* model_interface = robot_hw->get<franka_hw::FrankaModelInterface>();
         if (model_interface == nullptr) {
             ROS_ERROR_STREAM("ForceExampleController: Error getting model interface from hardware");
             return false;
@@ -86,13 +86,14 @@ namespace kimm_husky_controllers
 
         ctrl_ = std::make_shared<RobotController::HuskyFrankaWrapper>(group_name_, true, node_handle);
         ctrl_->initialize();
+
+        gravity_ctrl_subs_ = node_handle.subscribe("kimm_action_manager/gravity_ctrl", 1, &BasicHuskyFrankaController::gravityCallback, this);
         gravity_ctrl_ = true;
 
         // action_server
         joint_posture_action_server_ = std::make_unique<JointPostureActionServer>("kimm_action_manager/joint_posture_control", node_handle, ctrl_);
         se3_action_server_ = std::make_unique<SE3ActionServer>("kimm_action_manager/se3_control", node_handle, ctrl_);
         se3_array_action_server_ = std::make_unique<SE3ArrayActionServer>("kimm_action_manager/se3_array_control", node_handle, ctrl_);
-        gripper_action_server_ = std::make_unique<GripperActionServer>("kimm_action_manager/gripper_control", node_handle, ctrl_);
         move_action_server_ = std::make_unique<MoveActionServer>("kimm_action_manager/move_control", node_handle, ctrl_);
         
         // gui_pub
@@ -102,7 +103,7 @@ namespace kimm_husky_controllers
         vector<string> package_dirs;
         package_dirs.push_back(model_path);
         string urdfFileName = package_dirs[0] + urdf_name;
-        ROS_INFO_STREAM(urdfFileName);
+ 
         pinocchio::Model gui_model;
         pinocchio::urdf::buildModel(urdfFileName, gui_model, false);       
         
@@ -117,7 +118,9 @@ namespace kimm_husky_controllers
             gui_joint_msg_.velocity[j] = 0.0;
             gui_joint_msg_.effort[j] = 0.0;
         }
-        gui_joint_pub_ = node_handle.advertise<sensor_msgs::JointState>("/" + group_name_ + "/joint_states", 100);
+        gui_joint_pub_ = node_handle.advertise<sensor_msgs::JointState>("/" + group_name_ + "/gui/joint_states", 100);
+
+        ROS_WARN_STREAM("Everything is fine");
 
         return true;
     }
@@ -210,13 +213,11 @@ namespace kimm_husky_controllers
         joint_posture_action_server_->compute(ros::Time::now());
         se3_action_server_->compute(ros::Time::now());
         se3_array_action_server_->compute(ros::Time::now());
-        gripper_action_server_->compute(ros::Time::now());
         move_action_server_->compute(ros::Time::now());
 
         if (!joint_posture_action_server_->isrunning() &&
             !se3_action_server_->isrunning() &&
-            !se3_array_action_server_->isrunning() &&
-            !gripper_action_server_->isrunning() 
+            !se3_array_action_server_->isrunning()
             ){
             if (!gravity_ctrl_)
                 ctrl_->compute_default_ctrl(ros::Time::now());
@@ -227,20 +228,20 @@ namespace kimm_husky_controllers
         }
         
         // Customizing
-        robot_mass_(4, 4) *= 6.0;
-        robot_mass_(5, 5) *= 6.0;
-        robot_mass_(6, 6) *= 10.0;
+        // robot_mass_(4, 4) *= 6.0;
+        // robot_mass_(5, 5) *= 6.0;
+        // robot_mass_(6, 6) *= 10.0;
         
         franka_torque_ = robot_mass_ * ctrl_->state().franka.acc + robot_nle_;
 
-        MatrixXd Kd(7, 7);
-        Kd.setIdentity();
-        Kd = 2.0 * sqrt(5.0) * Kd;
-        Kd(5, 5) = 0.2;
-        Kd(4, 4) = 0.2;
-        Kd(6, 6) = 0.2; // this is practical term
-        franka_torque_ -= Kd * dq_filtered_;  
-        franka_torque_ << this->saturateTorqueRate(franka_torque_, robot_tau_);
+        // MatrixXd Kd(7, 7);
+        // Kd.setIdentity();
+        // Kd = 2.0 * sqrt(5.0) * Kd;
+        // Kd(5, 5) = 0.2;
+        // Kd(4, 4) = 0.2;
+        // Kd(6, 6) = 0.2; // this is practical term
+        // franka_torque_ -= Kd * dq_filtered_;  
+        // franka_torque_ << this->saturateTorqueRate(franka_torque_, robot_tau_);
 
         husky_qvel_ = ctrl_->state().husky.wheel_vel  * 0.01;//  + husky_qvel_prev_;
         double thes_vel = 5.0;
@@ -264,15 +265,15 @@ namespace kimm_husky_controllers
         husky_cmd_ *= 1.0;
 
 
-        // // if (print_rate_trigger_())
-        // // {
-        // //   ROS_INFO("--------------------------------------------------");
-        // //   ROS_INFO_STREAM("franka_torque_ :" << franka_torque_.transpose());
-        // //   ROS_INFO_STREAM("husky_cmd_ :" << husky_cmd_.transpose());
-        // // }
+        // if (print_rate_trigger_())
+        // {
+        //   ROS_INFO("--------------------------------------------------");
+        //   ROS_INFO_STREAM("franka_torque_ :" << franka_torque_.transpose());
+        //   ROS_INFO_STREAM("husky_cmd_ :" << husky_cmd_.transpose());
+        // }
         
-        franka_torque_.setZero();
-        husky_cmd_.setZero();
+        // franka_torque_.setZero();
+        // husky_cmd_.setZero();
 
         // to robot
         for (int i = 0; i < 7; i++)
@@ -338,7 +339,11 @@ namespace kimm_husky_controllers
         }
         return tau_d_saturated;
     }
+    void BasicHuskyFrankaController::gravityCallback(const std_msgs::BoolConstPtr &msg){
+        ctrl_->state().reset = true;
+        gravity_ctrl_ = msg->data;
+    }
 
 
-}; // namespace
-PLUGINLIB_EXPORT_CLASS(kimm_husky_controllers::BasicHuskyFrankaController, controller_interface::ControllerBase)
+}; // namespace kimm_action_manager
+PLUGINLIB_EXPORT_CLASS(kimm_action_manager::BasicHuskyFrankaController, controller_interface::ControllerBase)

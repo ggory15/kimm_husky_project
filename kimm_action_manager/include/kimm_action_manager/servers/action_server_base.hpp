@@ -41,38 +41,11 @@ class ActionServerBase
       setAborted();
     }
 
-    virtual void openDebugFile(const std::string& prefix)
-    {
-      const auto now = std::chrono::system_clock::now();
-      const auto now_time_t = std::chrono::system_clock::to_time_t(now);
-      const auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-        now.time_since_epoch()) % 1000;
-      std::stringstream ss;
-      ss << prefix << action_name_ << '_'
-         << std::put_time(std::localtime(&now_time_t), "%Y-%m-%d %a %T")
-         << '.' << std::setfill('0') << std::setw(3) << now_ms.count() << ".txt";
-        // std::cout << "[sss]: " << ss.str() << std::endl;
-      debug_file_.open(ss.str());
-    }
-
+    
   protected:
     int iter_per_print_ {10};
     int print_count_ {0};
     
-    void writeDebugInfos(const std::string &title, const std::string &context)
-    {
-      const auto now = std::chrono::system_clock::now();
-      const auto now_time_t = std::chrono::system_clock::to_time_t(now);
-      const auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-          now.time_since_epoch()) % 1000;
-      debug_file_ << "["
-          << std::put_time(std::localtime(&now_time_t), "%Y-%m-%d %a %T")
-          << '.' << std::setfill('0') << std::setw(3) << now_ms.count() << "]-";
-      
-      debug_file_ << "[" << title << "]: " << context << std::endl;
-      debug_file_.precision(4);
-      debug_file_ << std::setfill(' ');
-    }
     virtual void setSucceeded() {};
     virtual void setAborted() {};
 };

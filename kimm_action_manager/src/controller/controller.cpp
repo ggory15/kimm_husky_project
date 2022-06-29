@@ -28,7 +28,6 @@ namespace RobotController{
         vector<string> package_dirs;
         package_dirs.push_back(model_path);
         string urdfFileName = package_dirs[0] + urdf_name;
-        ROS_WARN_STREAM(urdfFileName);
 
         robot_ = std::make_shared<RobotWrapper>(urdfFileName, package_dirs, true, false);
         model_ = robot_->model();
@@ -53,7 +52,7 @@ namespace RobotController{
         postureTask_ = std::make_shared<TaskJointPosture>("task-posture", *robot_);
         Vector7d posture_gain;
         if (!issimulation_)
-        	posture_gain << 200., 200., 200., 200., 200., 200., 200.;
+        	posture_gain << 100., 100., 100., 100., 100., 100., 100.;
         else
         	posture_gain << 4000., 4000., 4000., 4000., 4000., 4000., 4000.;
         postureTask_->Kp(posture_gain);

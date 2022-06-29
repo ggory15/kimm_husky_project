@@ -65,7 +65,7 @@ using namespace Eigen;
 
 std::shared_ptr<RobotController::HuskyFrankaWrapper> ctrl_;
 
-namespace kimm_husky_controllers {
+namespace kimm_action_manager {
 
 class BasicHuskyFrankaController : public controller_interface::MultiInterfaceController<
 								   franka_hw::FrankaModelInterface,
@@ -81,6 +81,7 @@ class BasicHuskyFrankaController : public controller_interface::MultiInterfaceCo
 
     void odomCallback(const nav_msgs::OdometryConstPtr &msg);
     void huskystateCallback(const sensor_msgs::JointStateConstPtr &msg);
+    void gravityCallback(const std_msgs::BoolConstPtr &msg);
     double lowpassFilter(double sample_time, double y, double y_last, double cutoff_frequency){
         double gain = sample_time / (sample_time + (1.0 / (2.0 * M_PI * cutoff_frequency)));
         return gain * y + (1 - gain) * y_last;
@@ -93,7 +94,8 @@ class BasicHuskyFrankaController : public controller_interface::MultiInterfaceCo
 
     tf::TransformBroadcaster* br_;
     tf::TransformListener listener_;
-    ros::Subscriber odom_subs_, husky_state_subs_;
+
+    ros::Subscriber odom_subs_, husky_state_subs_, gravity_ctrl_subs_;
 
     sensor_msgs::JointState husky_state_msg_, gui_joint_msg_;
     nav_msgs::Odometry odom_msg_;
@@ -118,7 +120,6 @@ class BasicHuskyFrankaController : public controller_interface::MultiInterfaceCo
     std::unique_ptr<JointPostureActionServer> joint_posture_action_server_;
     std::unique_ptr<SE3ActionServer> se3_action_server_;
     std::unique_ptr<SE3ArrayActionServer> se3_array_action_server_;
-    std::unique_ptr<GripperActionServer> gripper_action_server_;
     std::unique_ptr<MoveActionServer> move_action_server_;
 
     // Variables
