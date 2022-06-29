@@ -156,6 +156,8 @@ namespace RobotController{
     
         const HQPData & HQPData = tsid_->computeProblemData(time.toSec(), state_.q, state_.v);       
         state_.franka.torque = state_.franka.M * tsid_->getAccelerations(solver_->solve(HQPData)).tail(na_-2);
+        state_.franka.acc = tsid_->getAccelerations(solver_->solve(HQPData)).tail(na_-2);
+        state_.husky.wheel_vel.setZero();
     }
     void HuskyFrankaWrapper::init_joint_posture_ctrl(ros::Time time){
         tsid_->removeTask("task-mobile");
@@ -179,6 +181,7 @@ namespace RobotController{
     
         const HQPData & HQPData = tsid_->computeProblemData(time.toSec(), state_.q, state_.v);       
         state_.franka.torque = state_.franka.M * tsid_->getAccelerations(solver_->solve(HQPData)).tail(na_-2);
+        state_.franka.acc = tsid_->getAccelerations(solver_->solve(HQPData)).tail(na_-2);
 
         state_.reset = true;
     }
@@ -237,6 +240,7 @@ namespace RobotController{
             
         const HQPData & HQPData = tsid_->computeProblemData(time.toSec(), state_.q, state_.v);       
         state_.franka.torque = state_.franka.M * tsid_->getAccelerations(solver_->solve(HQPData)).tail(na_-2);
+        state_.franka.acc = tsid_->getAccelerations(solver_->solve(HQPData)).tail(na_-2);
         state_.husky.wheel_vel = tsid_->getAccelerations(solver_->solve(HQPData)).head(2);
         if (!state_.franka.iswholebody){
             state_.husky.wheel_vel.setZero();
@@ -344,6 +348,8 @@ namespace RobotController{
         const HQPData & HQPData = tsid_->computeProblemData(time.toSec(), state_.q, state_.v);       
         state_.franka.torque = state_.franka.M * tsid_->getAccelerations(solver_->solve(HQPData)).tail(na_-2);
         state_.husky.wheel_vel = tsid_->getAccelerations(solver_->solve(HQPData)).head(2);
+        state_.franka.acc = tsid_->getAccelerations(solver_->solve(HQPData)).tail(na_-2);
+
         if (!state_.franka.iswholebody_array[state_.franka.array_cnt]){
             state_.husky.wheel_vel.setZero();
         }

@@ -51,6 +51,7 @@ typedef struct Franka_State {
     Vector7d q_ref;
     Vector7d v_ref;
     Vector7d torque;
+    Vector7d acc;
     SE3 H_ee_ref;
     SE3 H_ee_init;
     SE3 H_ee;

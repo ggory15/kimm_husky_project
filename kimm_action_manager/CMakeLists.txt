@@ -82,7 +82,8 @@ include_directories(
   ${Franka_INCLUDE_DIRS}
 )
 
-SET(${PROJECT_NAME}_HEADERS
+SET(LIBRARY_NAME kimm_action_manager_base)
+SET(${LIBRARY_NAME}_HEADERS
   include/kimm_action_manager/controller/controller.hpp
 
   include/kimm_action_manager/servers/action_server_base.hpp
@@ -93,7 +94,7 @@ SET(${PROJECT_NAME}_HEADERS
   include/kimm_action_manager/servers/gripper_action_server.hpp
 )
 
-SET(${PROJECT_NAME}_SOURCES
+SET(${LIBRARY_NAME}_SOURCES
   src/controller/controller.cpp
   
   src/servers/joint_posture_action_server.cpp
@@ -104,21 +105,41 @@ SET(${PROJECT_NAME}_SOURCES
 )
 
 
-ADD_SOURCE_GROUP(${PROJECT_NAME}_HEADERS)
-ADD_SOURCE_GROUP(${PROJECT_NAME}_SOURCES)
-ADD_LIBRARY(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS} )
-TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} SYSTEM PUBLIC $<INSTALL_INTERFACE:include> ${EIGEN3_INCLUDE_DIR} )
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC ${kimm_hqp_controller_LIBRARIES} ${pinocchio_LIBRARIES} ${kimm_trajectory_smoother_LIBRARIES} eiquadprog::eiquadprog -lpthread)
+ADD_SOURCE_GROUP(${LIBRARY_NAME}_HEADERS)
+ADD_SOURCE_GROUP(${LIBRARY_NAME}_SOURCES)
+ADD_LIBRARY(${LIBRARY_NAME} SHARED ${${LIBRARY_NAME}_SOURCES} ${${LIBRARY_NAME}_HEADERS} )
+TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} SYSTEM PUBLIC $<INSTALL_INTERFACE:include> ${EIGEN3_INCLUDE_DIR} )
+TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC ${kimm_hqp_controller_LIBRARIES} ${pinocchio_LIBRARIES} ${kimm_trajectory_smoother_LIBRARIES} eiquadprog::eiquadprog -lpthread)
 
 # exe for simulation
 add_executable(${PROJECT_NAME}_simulation src/simulation/simulation.cpp)
-target_link_libraries(${PROJECT_NAME}_simulation ${PROJECT_NAME} ${catkin_LIBRARIES} -lpthread)
+target_link_libraries(${PROJECT_NAME}_simulation ${LIBRARY_NAME} ${catkin_LIBRARIES} -lpthread)
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME}_simulation  SYSTEM PUBLIC $<INSTALL_INTERFACE:include>)
 
-# # exe for real
-# add_executable(${PROJECT_NAME}_real src/real/real.cpp)
-# target_link_libraries(${PROJECT_NAME}_real ${PROJECT_NAME} ${catkin_LIBRARIES} -lpthread)
-# TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME}_real SYSTEM PUBLIC $<INSTALL_INTERFACE:include>)
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+  ${Franka_INCLUDE_DIRS}
+)
+
+add_library(${PROJECT_NAME}
+  src/real/real.cpp
+)
+
+add_dependencies(${PROJECT_NAME}
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  ${PROJECT_NAME}_generate_messages_cpp
+  ${PROJECT_NAME}_gencpp
+  ${PROJECT_NAME}_gencfg
+)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  ${Franka_LIBRARIES}
+  ${catkin_LIBRARIES}
+  ${LIBRARY_NAME}
+)
 
 #############
 ## Install ##
