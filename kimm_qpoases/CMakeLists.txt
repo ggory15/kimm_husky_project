@@ -1,0 +1,48 @@
+cmake_minimum_required(VERSION 3.0.2)
+
+SET(PROJECT_NAME kimm_qpoases)
+SET(PROJECT_DESCRIPTION "qpOASES for KIMM")
+SET(PROJECT_URL "https://github.com/ggory15/KIMM_qpOASES")
+
+SET(CXX_DISABLE_WERROR TRUE)
+SET(CMAKE_VERBOSE_MAKEFILE TRUE)
+SET(PROJECT_USE_CMAKE_EXPORT TRUE)
+add_compile_options(-std=c++17 -O3 -DNDEBUG)
+
+#INCLUDE(cmake/base.cmake)
+INCLUDE(cmake/boost.cmake)
+INCLUDE(cmake/python.cmake)
+INCLUDE(cmake/ide.cmake)
+INCLUDE(cmake/apple.cmake)
+
+find_package(catkin REQUIRED)
+
+catkin_package(
+ INCLUDE_DIRS include
+ LIBRARIES ${PROJECT_NAME}
+ DEPENDS system_lib
+)
+
+add_definitions(-D__NO_COPYRIGHT__ -D__SUPPRESSANYOUTPUT__)
+
+FILE(GLOB ${PROJECT_NAME}_HEADERS
+  include/*.hpp
+  include/qpOASES/*.hpp
+  include/qpOASES/*.ipp
+  include/qpOASES/extras/*.hpp
+  include/qpOASES/extras/*.ipp
+  )
+
+include_directories(include)    
+FILE(GLOB ${PROJECT_NAME}_SRCS src/*.cpp)
+    
+ADD_HEADER_GROUP(${PROJECT_NAME}_HEADERS)
+ADD_SOURCE_GROUP(${PROJECT_NAME}_SRCS)
+
+ADD_LIBRARY(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SRCS} ${${PROJECT_NAME}_HEADERS})
+TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+
+#SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION})
+#INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
+
+#INSTALL(FILES package.xml DESTINATION share/${PROJECT_NAME})

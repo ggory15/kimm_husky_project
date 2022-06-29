@@ -1,0 +1,11 @@
+# Define the goal
+geometry_msgs/PoseArray target_poses
+std_msgs/Float32MultiArray durations
+bool[] relative
+bool[] wholebody
+---
+# Define the result
+bool is_completed
+---
+# Define a feedback message
+float32 percent_complete

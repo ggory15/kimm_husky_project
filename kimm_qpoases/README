@@ -1,0 +1,29 @@
+!!! ATTENTION
+    This repository contains an unofficial and outdated fork of qpOASES. The
+    fork is not supported anymore. It may contain bugs that are already fixed 
+    in the solver. Please consider obtaining the latest official release from
+    http://www.qpOASES.org/ instead of using this code.
+!!! ATTENTION
+
+
+Modified by Alexander Sherikov, 2012.
+http://github/asherikov/qpOASES
+
+- Removed documentation.
+- Removed interfaces.
+- Modified Makefile to use cmake.
+- Disabled all output to stdout.
+- Fixed optimization flags for compilation with cmake.
+
+Original version is available at http://www.qpOASES.org/
+Doxygen documentation: http://www.qpOASES.org/doxygen/html/index.html
+
+The original README file -> README.orig
+
+
+Notes:
+    - If cputime limit is reached the return value is RET_MAX_NWSR_REACHED.
+    - qpOASES may use one of two strategies to deal with semi-definite QP, 
+        the default one requires all lower/upper bounds on the decision 
+        variables to be active on the first iteration. This is bad for many 
+        problems. setToMPC() switches to another strategy (regularization).
