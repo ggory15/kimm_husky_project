@@ -286,9 +286,9 @@
   <joint name="ns0_velodyne_joint" type="fixed">
     <origin rpy="0 0 0" xyz="-0.2 0 0.75"/>
     <parent link="ns0_rviz_base_link"/>
-    <child link="ns0_velodyne"/>
+    <child link="ns0_rviz_velodyne"/>
   </joint>
-  <link  name="ns0_velodyne">
+  <link  name="ns0_rviz_velodyne">
       <visual>
         <geometry>
           <mesh filename="package://velodyne_description/meshes/VLP16_base_1.dae" />

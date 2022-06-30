@@ -9,7 +9,7 @@ ceres_loss_function: None
 # ROS Parameters
 odom_frame: ns0_odom
 map_frame: map
-base_frame: ns0_rviz_base_footprint
+base_frame: ns0_base_footprint
 scan_topic: /ns0/scan
 mode: mapping #localization
 

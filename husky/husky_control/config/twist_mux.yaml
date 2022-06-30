@@ -7,6 +7,10 @@ topics:
   topic   : twist_marker_server/cmd_vel
   timeout : 0.5
   priority: 8
+- name    : move_base
+  topic   : move_base/cmd_vel
+  timeout : 0.5
+  priority: 5
 - name    : external
   topic   : cmd_vel
   timeout : 0.5

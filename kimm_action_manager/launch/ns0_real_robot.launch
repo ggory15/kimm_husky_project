@@ -28,8 +28,15 @@
 
     <include file="$(find velodyne_pointcloud)/launch/VLP16_points_ns0.launch"/>
     
+    
     <rosparam command="load" file="$(find kimm_action_manager)/config/kimm_action_manager.yaml" />
     <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="basic_husky_franka_controller"/>
+    <group ns ="husky">
+    <group ns ="move_base">
+      <include file="$(find kimm_husky_navigation)/launch/move_base_ns0.launch"/>
+    </group>
+    </group>
   </group>
+    
     <include file="$(find kimm_husky_viz)/launch/view_robot_ns0.launch"/>
 </launch>

@@ -8,10 +8,15 @@ MoveActionServer::MoveActionServer(std::string name, ros::NodeHandle &nh, std::s
     as_.start();
 
     string group_name;
+    bool issimulation;
     nh.getParam("/robot_group", group_name);   
+    nh.getParam(group_name + "/issimulation", issimulation);   
 
     move_base_subscriber_ = nh.subscribe("/" + group_name + "/move_base/result", 1, &MoveActionServer::movebaseCallback, this);
-    move_base_publisher_ = nh.advertise<geometry_msgs::PoseStamped>("/" + group_name + "/move_base_simple/goal", 100);   
+    if (issimulation)
+      move_base_publisher_ = nh.advertise<geometry_msgs::PoseStamped>("/" + group_name + "/move_base_simple/goal", 100);   
+    else
+      move_base_publisher_ = nh.advertise<geometry_msgs::PoseStamped>("/" + group_name + "/husky/move_base/move_base_simple/goal", 100);   
 
     move_done_ = false;
 }

@@ -108,6 +108,14 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     <parent link="ns0_base_link" />
     <child link="ns0_base_footprint" />
   </joint>
+  
+  <link name="ns0_velodyne"/>
+  <joint name="velodyne_joint" type="fixed">
+    <origin xyz="-0.25 0 0.55" rpy="0 0 0" />
+    <parent link="ns0_base_link" />
+    <child link="ns0_velodyne" />
+  </joint>
+ 
 
   <!-- Inertial link stores the robot's inertial information -->
   <link name="ns0_inertial_link">

@@ -118,6 +118,29 @@ class ControlSuiteShell(cmd.Cmd):
             else:
                 print ("action failed")
 
+    def do_move(self, arg):
+        'Move'
+        goal = kimm_action_manager.msg.MoveGoal
+
+        goal.target_pose = PoseStamped()
+        goal.target_pose.header.stamp = rospy.Time.now()
+        goal.target_pose.header.frame_id = "map"
+        goal.target_pose.pose.position.x = 1.908
+        goal.target_pose.pose.position.y = -0.586
+        goal.target_pose.pose.position.z = 0.0
+
+        goal.target_pose.pose.orientation.x = 0 
+        goal.target_pose.pose.orientation.y = 0
+        goal.target_pose.pose.orientation.z = -0.193
+        goal.target_pose.pose.orientation.w = 0.981
+
+        self.move_ctrl_client.send_goal(goal)
+        self.move_ctrl_client.wait_for_result()
+
+        if (self.move_ctrl_client.get_result()):
+            print ("action succeed")
+        else:
+            print ("action failed")
     
 
     def do_quit(self, arg):
