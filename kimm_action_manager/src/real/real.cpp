@@ -20,7 +20,8 @@ namespace kimm_action_manager
         husky_state_msg_.position.resize(4);
         husky_state_msg_.velocity.resize(4);
         husky_state_subs_ = node_handle.subscribe( "/" + group_name_ + "/husky/joint_states", 1, &BasicHuskyFrankaController::huskystateCallback, this);
-
+        odom_subs_ = node_handle.subscribe( "/" + group_name_ + "/husky/odometry/filtered", 1, &BasicHuskyFrankaController::odomCallback, this);
+        
         // franka
         std::vector<std::string> joint_names;
         std::string arm_id;
@@ -120,7 +121,7 @@ namespace kimm_action_manager
             gui_joint_msg_.velocity[j] = 0.0;
             gui_joint_msg_.effort[j] = 0.0;
         }
-        gui_joint_pub_ = node_handle.advertise<sensor_msgs::JointState>("/" + group_name_ + "/gui/joint_states", 100);
+        gui_joint_pub_ = node_handle.advertise<sensor_msgs::JointState>("/" + group_name_ + "/joint_states", 100);
 
         return true;
     }
@@ -187,6 +188,14 @@ namespace kimm_action_manager
 
         odom_lpf_prev_ = odom_lpf_;
         odom_dot_lpf_prev_ = odom_dot_lpf_;
+
+        tf::Transform transform;
+        transform.setOrigin( tf::Vector3(odom_lpf_(0), odom_lpf_(1), 0.0 ));
+        
+        tf::Quaternion quat;
+        quat.setRPY(0, 0, odom_lpf_(2));
+        transform.setRotation(quat);
+        br_->sendTransform(tf::StampedTransform(transform, ros::Time::now(), group_name_ + "_odom", group_name_ + "_rviz_base_link"));
 
         wheel_vel_(0) = husky_state_msg_.velocity[1]; // left vel
         wheel_vel_(1) = husky_state_msg_.velocity[0]; // right vel (not use.)
@@ -306,11 +315,22 @@ namespace kimm_action_manager
 
     void BasicHuskyFrankaController::asyncCalculationProc(){
         calculation_mutex_.lock();
-        
-        
 
         ctrl_->husky_update(odom_lpf_, odom_dot_lpf_, Vector2d::Zero(), wheel_vel_);
         ctrl_->franka_update(franka_q_, dq_filtered_);
+
+        gui_joint_msg_.header.stamp = ros::Time::now();
+        
+        gui_joint_msg_.position[0] = husky_state_msg_.position[0];
+        gui_joint_msg_.position[1] = husky_state_msg_.position[1];
+        gui_joint_msg_.position[2] = husky_state_msg_.position[0];
+        gui_joint_msg_.position[3] = husky_state_msg_.position[1];
+
+        for (int i=0; i< 7; i++){ 
+            gui_joint_msg_.position[i+4] = franka_q_(i);
+        }
+
+        gui_joint_pub_.publish(gui_joint_msg_);
 
         calculation_mutex_.unlock();
     }
