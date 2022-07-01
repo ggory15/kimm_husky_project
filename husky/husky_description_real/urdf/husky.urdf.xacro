@@ -115,6 +115,13 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     <parent link="ns0_base_link" />
     <child link="ns0_velodyne" />
   </joint>
+
+  <link name="ns0_camera_0"/>
+  <joint name="camera_joint" type="fixed">
+    <origin xyz="0.25 0 0.55" rpy="0 0 0" />
+    <parent link="ns0_base_link" />
+    <child link="ns0_camera_0" />
+  </joint>
  
 
   <!-- Inertial link stores the robot's inertial information -->
