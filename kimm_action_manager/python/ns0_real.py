@@ -38,6 +38,8 @@ class ControlSuiteShell(cmd.Cmd):
         self.se3_array_ctrl_client.wait_for_server()
         self.move_ctrl_client = actionlib.SimpleActionClient('/ns0/basic_husky_franka_controller/kimm_action_manager/move_control', kimm_action_manager.msg.MoveAction)
         self.move_ctrl_client.wait_for_server()
+        self.qr_ctrl_client = actionlib.SimpleActionClient('/ns0/basic_husky_franka_controller/kimm_action_manager/qr_control', kimm_action_manager.msg.QRAction)
+        self.qr_ctrl_client.wait_for_server()
 
         self.gravity_pub = rospy.Publisher('/ns0/basic_husky_franka_controller/kimm_action_manager/gravity_ctrl', Bool, queue_size=1)
         self.gravity = True
@@ -68,6 +70,37 @@ class ControlSuiteShell(cmd.Cmd):
             self.gravity = True
             self.gravity_pub.publish(True)
 
+    def do_qr(self, arg):
+        goal = kimm_action_manager.msg.QRGoal
+        goal.duration = 10.0
+
+        goal.qr_pose = Pose()
+        goal.qr_pose.position.x = 1.47
+        goal.qr_pose.position.y = -0.16
+        goal.qr_pose.position.z = 0.2
+
+        goal.qr_pose.orientation.x = 0.
+        goal.qr_pose.orientation.y = 0.
+        goal.qr_pose.orientation.z = 0.26
+        goal.qr_pose.orientation.w = 0.963
+
+        goal.target_pose = Pose()
+        goal.target_pose.position.x = 0
+        goal.target_pose.position.y = 0
+        goal.target_pose.position.z = 0.2
+
+        goal.target_pose.orientation.x = 0.
+        goal.target_pose.orientation.y = 0
+        goal.target_pose.orientation.z = 0
+        goal.target_pose.orientation.w = 1.0
+
+        self.qr_ctrl_client.send_goal(goal)
+        self.qr_ctrl_client.wait_for_result()
+        if (self.qr_ctrl_client.get_result()):
+            print ("action succeed")
+        else:
+            print ("action failed")
+
     def do_reach(self, arg):
         'SE3 Ctrl w/wo wholebody motion'
         if (len(arg) > 0):
@@ -97,18 +130,18 @@ class ControlSuiteShell(cmd.Cmd):
         else:
             print ("Wholebody Control")
             goal = kimm_action_manager.msg.SE3Goal
-            goal.duration = 2.0
+            goal.duration = 10.0
             goal.target_pose = Pose()
-            goal.target_pose.position.x = -0.2
-            goal.target_pose.position.y = 0.1
-            goal.target_pose.position.z = 0.0
+            goal.target_pose.position.x = 3.2
+            goal.target_pose.position.y = -0.185
+            goal.target_pose.position.z = 0.5
 
-            goal.target_pose.orientation.x = 0.258819
+            goal.target_pose.orientation.x = 0.
             goal.target_pose.orientation.y = 0
-            goal.target_pose.orientation.z = 0.
-            goal.target_pose.orientation.w = 0.9659258
+            goal.target_pose.orientation.z = 0
+            goal.target_pose.orientation.w = 1.0
 
-            goal.relative = True
+            goal.relative = False
             goal.wholebody = True
 
             self.se3_ctrl_client.send_goal(goal)
@@ -125,14 +158,14 @@ class ControlSuiteShell(cmd.Cmd):
         goal.target_pose = PoseStamped()
         goal.target_pose.header.stamp = rospy.Time.now()
         goal.target_pose.header.frame_id = "map"
-        goal.target_pose.pose.position.x = 1.908
+        goal.target_pose.pose.position.x = 1.9
         goal.target_pose.pose.position.y = -0.586
         goal.target_pose.pose.position.z = 0.0
 
         goal.target_pose.pose.orientation.x = 0 
         goal.target_pose.pose.orientation.y = 0
-        goal.target_pose.pose.orientation.z = -0.193
-        goal.target_pose.pose.orientation.w = 0.981
+        goal.target_pose.pose.orientation.z = 0
+        goal.target_pose.pose.orientation.w = 1.0
 
         self.move_ctrl_client.send_goal(goal)
         self.move_ctrl_client.wait_for_result()

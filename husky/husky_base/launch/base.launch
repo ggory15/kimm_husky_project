@@ -27,8 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <launch>
 <group ns="ns0">
+    <param name="robot_group" type="string" value="ns0"/>
 <group ns="husky">
-
     <arg name="port" default="$(optenv HUSKY_PORT /dev/prolific)" />
 
     <!-- Husky harware driver -->

@@ -14,6 +14,7 @@ namespace kimm_action_manager
     bool BasicHuskyFrankaController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& node_handle)
     {
         node_handle.getParam("/robot_group", group_name_);
+        ROS_WARN_STREAM(group_name_);
 
         // husky
         husky_ctrl_pub_.init(node_handle, "/" + group_name_ + "/husky/cmd_vel", 4);
@@ -98,6 +99,7 @@ namespace kimm_action_manager
         se3_action_server_ = std::make_unique<SE3ActionServer>("kimm_action_manager/se3_control", node_handle, ctrl_);
         se3_array_action_server_ = std::make_unique<SE3ArrayActionServer>("kimm_action_manager/se3_array_control", node_handle, ctrl_);
         move_action_server_ = std::make_unique<MoveActionServer>("kimm_action_manager/move_control", node_handle, ctrl_);
+        qr_action_server_ = std::make_unique<QRActionServer>("kimm_action_manager/qr_control", node_handle, ctrl_);
         
         // gui_pub
         string model_path, urdf_name;
@@ -189,6 +191,47 @@ namespace kimm_action_manager
         odom_lpf_prev_ = odom_lpf_;
         odom_dot_lpf_prev_ = odom_dot_lpf_;
 
+        tf::StampedTransform transform2;
+        tf::Vector3 origin;
+        tf::Quaternion q;
+        
+        try{
+            listener_.lookupTransform("/map", "/" + group_name_ + "_base_link" , ros::Time(0), transform2);
+            isslam_ = true;
+            origin = transform2.getOrigin();
+            q = transform2.getRotation();
+            pinocchio::SE3 odom;
+            odom.translation()(0) = origin.getX();
+            odom.translation()(1) = origin.getY();
+            odom.translation()(2) = origin.getZ();
+            Eigen::Quaterniond quat;
+            quat.x() = q.x();
+            quat.y() = q.y();
+            quat.z() = q.z();
+            quat.w() = q.w();
+            quat.normalize();
+            odom.rotation() = quat.toRotationMatrix();
+            
+            slam_lpf_(0) = odom.translation()(0);
+            slam_lpf_(1) = odom.translation()(1);
+            slam_lpf_(2) = atan2(-odom.rotation()(0, 1), odom.rotation()(0,0));
+
+            if (isslam_){
+                slam_lpf_prev_ = slam_lpf_;
+            }
+
+            odom_lpf_(0) = this->lowpassFilter(0.001, slam_lpf_(0), slam_lpf_prev_(0), 100);
+            odom_lpf_(1) = this->lowpassFilter(0.001, slam_lpf_(1), slam_lpf_prev_(1), 100);
+            odom_lpf_(2) = this->lowpassFilter(0.001, slam_lpf_(2), slam_lpf_prev_(2), 100);
+
+            slam_lpf_prev_ = slam_lpf_;  
+        }
+        catch (tf::TransformException ex){
+            ROS_WARN_STREAM("no slam");
+            isslam_ = false;
+        }
+
+
         tf::Transform transform;
         transform.setOrigin( tf::Vector3(odom_lpf_(0), odom_lpf_(1), 0.0 ));
         
@@ -227,10 +270,12 @@ namespace kimm_action_manager
         se3_action_server_->compute(ros::Time::now());
         se3_array_action_server_->compute(ros::Time::now());
         move_action_server_->compute(ros::Time::now());
+        qr_action_server_->compute(ros::Time::now());
 
         if (!joint_posture_action_server_->isrunning() &&
             !se3_action_server_->isrunning() &&
-            !se3_array_action_server_->isrunning()
+            !se3_array_action_server_->isrunning() &&
+            !qr_action_server_->isrunning()
             ){
             if (!gravity_ctrl_)
                 ctrl_->compute_default_ctrl(ros::Time::now());

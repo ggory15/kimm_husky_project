@@ -40,6 +40,7 @@ add_action_files(DIRECTORY action FILES
   SE3Array.action
   Gripper.action
   Move.action
+  QR.action
 )
 
 generate_messages(
@@ -92,6 +93,7 @@ SET(${LIBRARY_NAME}_HEADERS
   include/kimm_action_manager/servers/se3_array_action_server.hpp
   include/kimm_action_manager/servers/move_action_server.hpp
   include/kimm_action_manager/servers/gripper_action_server.hpp
+  include/kimm_action_manager/servers/qr_action_server.hpp
 )
 
 SET(${LIBRARY_NAME}_SOURCES
@@ -102,6 +104,7 @@ SET(${LIBRARY_NAME}_SOURCES
   src/servers/se3_array_action_server.cpp
   src/servers/move_action_server.cpp
   src/servers/gripper_action_server.cpp
+  src/servers/qr_action_server.cpp
 )
 
 

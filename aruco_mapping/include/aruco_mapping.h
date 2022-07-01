@@ -131,7 +131,8 @@ private:
   //Launch file params
   std::string camera_frame_id_;
   std::string calib_filename_;                    
-  std::string space_type_;                        
+  std::string space_type_;        
+  std::string group_name_;                
   float marker_size_;
   int num_of_markers_;
   bool roi_allowed_;

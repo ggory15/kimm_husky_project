@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ARUCO_MAPPING_CPP
 #define ARUCO_MAPPING_CPP
 
+#include <tf2/LinearMath/Quaternion.h>
 #include <aruco_mapping.h>
 #include "lidar_camera_calibration/marker_6dof.h"
 #include <geometry_msgs/Pose.h>
@@ -58,7 +59,8 @@ ArucoMapping::ArucoMapping(ros::NodeHandle *nh) :
   marker_id_2_(202),
   marker_id_3_(11),
   marker_id_4_(12),
-  marker_id_5_(13)
+  marker_id_5_(13),
+  group_name_("ns0")
   
 {
   double temp_marker_size;  
@@ -80,6 +82,7 @@ ArucoMapping::ArucoMapping(ros::NodeHandle *nh) :
   nh->getParam("aruco_mapping/marker_id_4", marker_id_4_);
   nh->getParam("aruco_mapping/marker_id_5", marker_id_5_);
   nh->getParam("aruco_mapping/camera_frame_id", camera_frame_id_);
+  nh->getParam("robot_group", group_name_); 
      
   // Double to float conversion
   marker_size_ = float(temp_marker_size);
@@ -310,17 +313,31 @@ bool ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
     broadcaster_.sendTransform(tf::StampedTransform(markers_[i].current_camera_tf, ros::Time::now(), camera_frame_id_, marker_frame_id));
 
        
-   
    if(marker_id_1_ == current_marker_id){
       //marker_msg_pub1_.publish(marker_pose_msg);
 
+  
       tf::StampedTransform odom_to_marker;
       try{
           // listener_->lookupTransform("odom", "safe_link", ros::Time(0), odom_to_marker);
-          listener_->lookupTransform("odom", marker_frame_id, ros::Time(0), odom_to_marker);
+          listener_->lookupTransform("/map", marker_frame_id, ros::Time(0), odom_to_marker);
 
           geometry_msgs::Pose odom_to_marker_msg;
           tf::poseTFToMsg(odom_to_marker, odom_to_marker_msg);
+
+          tf::Quaternion q(odom_to_marker_msg.orientation.x, odom_to_marker_msg.orientation.y, odom_to_marker_msg.orientation.z, odom_to_marker_msg.orientation.w);
+          tf::Quaternion qy(0.0, 0.7071, 0.0, 0.7071);
+          
+          tf::Quaternion qq = q*qy;
+          
+          odom_to_marker_msg.orientation.x = qq[0];
+          odom_to_marker_msg.orientation.y = qq[1];
+          odom_to_marker_msg.orientation.z = qq[2];
+          odom_to_marker_msg.orientation.w = qq[3];
+          // Eigen::Isometry3d To2m;
+          // To2m.linear() = qq;
+          // To2m.translation() = Eigen::Vector3d(odom_to_marker_msg.position.x, odom_to_marker_msg.position.y, odom_to_marker_msg.position.z);          
+
           marker_msg_pub1_.publish(odom_to_marker_msg);
       }
       catch (tf::TransformException &ex) {
@@ -332,7 +349,7 @@ bool ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
       tf::StampedTransform odom_to_marker;
 
       try{
-          listener_->lookupTransform("odom", marker_frame_id, ros::Time(0), odom_to_marker);
+          listener_->lookupTransform(group_name_ + "_odom", marker_frame_id, ros::Time(0), odom_to_marker);
 
           geometry_msgs::Pose odom_to_marker_msg;
           tf::poseTFToMsg(odom_to_marker, odom_to_marker_msg);
@@ -347,7 +364,7 @@ bool ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
       tf::StampedTransform odom_to_marker;
 
       try{
-          listener_->lookupTransform("odom", marker_frame_id, ros::Time(0), odom_to_marker);
+          listener_->lookupTransform(group_name_ + "_odom", marker_frame_id, ros::Time(0), odom_to_marker);
 
           geometry_msgs::Pose odom_to_marker_msg;
           tf::poseTFToMsg(odom_to_marker, odom_to_marker_msg);
@@ -362,7 +379,7 @@ bool ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
       tf::StampedTransform odom_to_marker;
 
       try{
-          listener_->lookupTransform("odom", marker_frame_id, ros::Time(0), odom_to_marker);
+          listener_->lookupTransform(group_name_ + "_odom", marker_frame_id, ros::Time(0), odom_to_marker);
 
           geometry_msgs::Pose odom_to_marker_msg;
           tf::poseTFToMsg(odom_to_marker, odom_to_marker_msg);
@@ -377,7 +394,7 @@ bool ArucoMapping::processImage(cv::Mat input_image,cv::Mat output_image)
       tf::StampedTransform odom_to_marker;
 
       try{
-          listener_->lookupTransform("odom", marker_frame_id, ros::Time(0), odom_to_marker);
+          listener_->lookupTransform(group_name_ + "_odom", marker_frame_id, ros::Time(0), odom_to_marker);
 
           geometry_msgs::Pose odom_to_marker_msg;
           tf::poseTFToMsg(odom_to_marker, odom_to_marker_msg);
@@ -440,7 +457,7 @@ ArucoMapping::publishMarker(geometry_msgs::Pose marker_pose, int marker_id, int 
   visualization_msgs::Marker vis_marker;
 
   if(index == 0)
-    vis_marker.header.frame_id = "world";
+    vis_marker.header.frame_id = "map";
   else
   {
     std::stringstream marker_tf_id_old;

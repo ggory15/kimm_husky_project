@@ -4,11 +4,11 @@
   <!-- ArUco mapping -->
   <group ns ="ns0">
     <node pkg="aruco_mapping" type="aruco_mapping" name="aruco_mapping" output="screen">
-      <remap from="/image_raw" to="/camera/color/image_raw"/>
+      <remap from="image_raw" to="color/image_raw"/>
 
       <param name="calibration_file" type="string" value="$(find aruco_mapping)/data/zed_left_uurmi.ini" /> 
       <param name="num_of_markers" type="int" value="2" />
-      <param name="marker_size" type="double" value="0.205"/>
+      <param name="marker_size" type="double" value="0.180"/>
       <param name="space_type" type="string" value="plane" />
       <param name="roi_allowed" type="bool" value="false" />
       <param name="camera_frame_id" type="string" value="ns0_camera_0" />
@@ -17,9 +17,8 @@
       <param name="roi_y" type="int" value="0" />
       <param name="roi_width" type="int" value="640" /> 
       <param name="roi_height" type="int" value="480" /> 
-      
-      <param name="view_image" type="bool" value="true" />
-
+    
+      <param name="view_image" type="bool" value="false" />
     </node>  
   </group>  
 </launch>

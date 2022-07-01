@@ -3,8 +3,8 @@
 
   <arg name="robot_ip" default="192.168.10.102" />
   <arg name="load_gripper" default="true" />
-  
   <param name="robot_group" type="string" value="ns0"/>
+
   <group ns ="ns0">
     <param name="issimulation" type="bool" value="false"/>
 
@@ -12,6 +12,7 @@
       <arg name="robot_ip" value="$(arg robot_ip)" />
       <arg name="load_gripper" value="$(arg load_gripper)" />
     </include>
+    <param name="robot_group" type="string" value="ns0"/>
     
     <param name="urdf_path" type="string" value="$(find husky_description)"/>
     <param name="urdf_name" type="string" value="/husky_single/husky_panda_hand_free.urdf"/>
@@ -29,6 +30,7 @@
     <include file="$(find velodyne_pointcloud)/launch/VLP16_points_ns0.launch"/>
     
     
+    
     <rosparam command="load" file="$(find kimm_action_manager)/config/kimm_action_manager.yaml" />
     <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="basic_husky_franka_controller"/>
     <group ns ="husky">
@@ -37,6 +39,8 @@
     </group>
     </group>
   </group>
-    
+
+    <include file="$(find realsense2_camera)/launch/ns0_rs_camera.launch"/>
+    <include file="$(find aruco_mapping)/launch/ns0_aruco_mapping.launch"/>
     <include file="$(find kimm_husky_viz)/launch/view_robot_ns0.launch"/>
 </launch>

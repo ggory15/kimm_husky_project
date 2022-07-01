@@ -5,6 +5,7 @@ add_compile_options(-std=c++11)
 
 find_package(OpenCV REQUIRED)
 find_package(aruco REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS 
              roscpp
@@ -18,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
              )
 
 include_directories(${catkin_INCLUDE_DIRS}
+                    ${EIGEN3_INCLUDE_DIRS}
                     ${PROJECT_SOURCE_DIR}/include/)
 
 include_directories(${PROJECT_SOURCE_DIR}/src/)

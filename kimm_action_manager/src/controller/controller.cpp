@@ -174,6 +174,8 @@ namespace RobotController{
         trajPosture_Cubic_->setDuration(state_.franka.duration);
         trajPosture_Cubic_->setStartTime(time.toSec());
         trajPosture_Cubic_->setGoalSample(state_.franka.q_ref);  
+        ROS_WARN_STREAM(state_.franka.H_ee);
+        
     }
     void HuskyFrankaWrapper::compute_joint_posture_ctrl(ros::Time time){
         trajPosture_Cubic_->setCurrentTime(time.toSec());
@@ -209,7 +211,7 @@ namespace RobotController{
         trajEE_Cubic_->setDuration(state_.franka.duration);
         trajEE_Cubic_->setInitSample(state_.franka.H_ee);
         state_.franka.H_ee_init = state_.franka.H_ee;  
-      
+
         if (state_.franka.isrelative){
             state_.franka.H_ee_ref.translation() = state_.franka.H_ee_ref.translation() + state_.franka.H_ee.translation();
             state_.franka.H_ee_ref.rotation() = state_.franka.H_ee.rotation() * state_.franka.H_ee_ref.rotation();
@@ -246,6 +248,8 @@ namespace RobotController{
         if (!state_.franka.iswholebody){
             state_.husky.wheel_vel.setZero();
         }
+
+        state_.reset = true;
     }
 
     void HuskyFrankaWrapper::init_se3_array_ctrl(ros::Time time){
@@ -354,6 +358,8 @@ namespace RobotController{
         if (!state_.franka.iswholebody_array[state_.franka.array_cnt]){
             state_.husky.wheel_vel.setZero();
         }
+
+        state_.reset = true;
     }
 
 

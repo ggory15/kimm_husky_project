@@ -56,6 +56,7 @@
 #include <kimm_action_manager/servers/se3_array_action_server.hpp>
 #include <kimm_action_manager/servers/gripper_action_server.hpp>
 #include <kimm_action_manager/servers/move_action_server.hpp>
+#include <kimm_action_manager/servers/qr_action_server.hpp>
 
 // Tf
 #include <tf/transform_broadcaster.h>
@@ -103,7 +104,7 @@ class BasicHuskyFrankaController : public controller_interface::MultiInterfaceCo
     // thread
     std::mutex calculation_mutex_;
     std::thread async_calculation_thread_, mode_change_thread_;
-    bool is_calculated_{false}, quit_all_proc_{false}, gravity_ctrl_{true};
+    bool is_calculated_{false}, quit_all_proc_{false}, gravity_ctrl_{true}, isslam_{false};
 
     std::unique_ptr<franka_hw::FrankaModelHandle> model_handle_;
     std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
@@ -121,13 +122,14 @@ class BasicHuskyFrankaController : public controller_interface::MultiInterfaceCo
     std::unique_ptr<SE3ActionServer> se3_action_server_;
     std::unique_ptr<SE3ArrayActionServer> se3_array_action_server_;
     std::unique_ptr<MoveActionServer> move_action_server_;
+    std::unique_ptr<QRActionServer> qr_action_server_;
 
     // Variables
     const double delta_tau_max_{30.0};
     Vector7d dq_filtered_, franka_torque_, franka_q_;
     Vector6d f_filtered_, f_;
     Eigen::VectorXd franka_qacc_, robot_nle_, robot_g_, husky_qvel_, husky_qacc_, husky_qvel_prev_;
-    Vector3d odom_lpf_, odom_dot_lpf_, odom_lpf_prev_, odom_dot_lpf_prev_;
+    Vector3d odom_lpf_, odom_dot_lpf_, odom_lpf_prev_, odom_dot_lpf_prev_, slam_lpf_prev_, slam_lpf_;
     Vector2d husky_cmd_, wheel_vel_;
     MatrixXd robot_mass_, robot_J_, robot_tau_;
     double time_;
