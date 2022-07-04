@@ -1,7 +1,17 @@
 <launch>
   <group ns ="ns0">
-    <node pkg="slam_toolbox" type="localization_slam_toolbox_node" name="slam_toolbox" output="screen">
-      <rosparam command="load" file="$(find kimm_husky_navigation)/config/mapper_params_localization.yaml" />
-    </node>
+	<include file="$(find velodyne_pointcloud)/launch/VLP16_points_ns0.launch"/>
+	  <node pkg="slam_toolbox" type="localization_slam_toolbox_node" name="slam_toolbox" output="screen">
+	      <rosparam command="load" file="$(find kimm_husky_navigation)/config/mapper_params_localization_ns0.yaml" />
+	  </node>
+         <group ns ="husky">
+	    <group ns ="move_base">
+	      <include file="$(find kimm_husky_navigation)/launch/move_base_ns0.launch"/>
+	    </group>
+    </group>
   </group>
+    
+	<include file="$(find realsense2_camera)/launch/ns0_rs_camera.launch"/>
+	<include file="$(find aruco_mapping)/launch/ns0_aruco_mapping.launch"/>
+	
 </launch>
