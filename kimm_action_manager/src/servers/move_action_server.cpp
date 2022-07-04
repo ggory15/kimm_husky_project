@@ -9,7 +9,7 @@ MoveActionServer::MoveActionServer(std::string name, ros::NodeHandle &nh, std::s
 
     string group_name;
     bool issimulation;
-    nh.getParam("robot_group", group_name);   
+    nh.getParam("/robot_group", group_name);   
     nh.getParam(group_name + "/issimulation", issimulation);   
 
     move_base_subscriber_ = nh.subscribe("/" + group_name + "/move_base/result", 1, &MoveActionServer::movebaseCallback, this);

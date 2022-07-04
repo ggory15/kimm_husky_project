@@ -79,7 +79,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
   <xacro:property name="wheel_radius" value="0.1651" />
 
   <!-- Base link is the center of the robot's bottom plate -->
-  <link name="ns0_base_link">
+  <link name="ns1_base_link">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
@@ -101,37 +101,37 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
   </link>
 
   <!-- Base footprint is on the ground under the robot -->
-  <link name="ns0_base_footprint"/>
+  <link name="ns1_base_footprint"/>
 
   <joint name="base_footprint_joint" type="fixed">
     <origin xyz="0 0 ${wheel_vertical_offset - wheel_radius}" rpy="0 0 0" />
-    <parent link="ns0_base_link" />
-    <child link="ns0_base_footprint" />
+    <parent link="ns1_base_link" />
+    <child link="ns1_base_footprint" />
   </joint>
   
-  <link name="ns0_velodyne"/>
+  <link name="ns1_velodyne"/>
   <joint name="velodyne_joint" type="fixed">
     <origin xyz="-0.25 0 0.55" rpy="0 0 0" />
-    <parent link="ns0_base_link" />
-    <child link="ns0_velodyne" />
+    <parent link="ns1_base_link" />
+    <child link="ns1_velodyne" />
   </joint>
 
-  <link name="ns0_camera_0_tmp"/>
-  <link name="ns0_camera_0"/>
+  <link name="ns1_camera_0_tmp"/>
+  <link name="ns1_camera_0"/>
   <joint name="camera_joint0_tmp" type="fixed">
     <origin xyz="0.40 0 0.3" rpy="0 1.5707 0" />
-    <parent link="ns0_base_link" />
-    <child link="ns0_camera_0_tmp" />
+    <parent link="ns1_base_link" />
+    <child link="ns1_camera_0_tmp" />
   </joint>
   <joint name="camera_joint0" type="fixed">
     <origin xyz="0 0 0 " rpy="0 0 -1.5707" />
-    <parent link="ns0_camera_0_tmp" />
-    <child link="ns0_camera_0" />
+    <parent link="ns1_camera_0_tmp" />
+    <child link="ns1_camera_0" />
   </joint>
  
 
   <!-- Inertial link stores the robot's inertial information -->
-  <link name="ns0_inertial_link">
+  <link name="ns1_inertial_link">
     <inertial>
       <mass value="46.034" />
       <origin xyz="-0.00065 -0.085 0.062" />
@@ -141,17 +141,17 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
   <joint name="inertial_joint" type="fixed">
     <origin xyz="0 0 0" rpy="0 0 0" />
-    <parent link="ns0_base_link" />
-    <child link="ns0_inertial_link" />
+    <parent link="ns1_base_link" />
+    <child link="ns1_inertial_link" />
   </joint>
 
   <!-- IMU Link is the standard mounting position for the UM6 IMU.-->
   <!-- Can be modified with environment variables in /etc/ros/setup.bash -->
-  <link name="ns0_imu_link"/>
+  <link name="ns1_imu_link"/>
   <joint name="imu_joint" type="fixed">
     <origin xyz="$(optenv HUSKY_IMU_XYZ 0.19 0 0.149)" rpy="$(optenv HUSKY_IMU_RPY 0 -1.5708 3.1416)" />
-    <parent link="ns0_base_link" />
-    <child link="ns0_imu_link" />
+    <parent link="ns1_base_link" />
+    <child link="ns1_imu_link" />
   </joint>
   <gazebo reference="imu_link">
   </gazebo>
@@ -182,8 +182,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
     <joint name="laser_mount_joint" type="fixed">
       <origin xyz="$(arg laser_xyz)" rpy="$(arg laser_rpy)" />
-      <parent link="ns0_top_plate_link" />
-      <child link="ns0_base_laser_mount" />
+      <parent link="ns1_top_plate_link" />
+      <child link="ns1_base_laser_mount" />
     </joint>
   </xacro:if>
   <xacro:if value="$(arg laser_secondary_enabled)">
@@ -193,8 +193,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
     <joint name="laser_secondary_mount_joint" type="fixed">
       <origin xyz="$(arg laser_secondary_xyz)" rpy="$(arg laser_secondary_rpy)" />
-      <parent link="ns0_top_plate_link" />
-      <child link="ns0_rear_laser_mount" />
+      <parent link="ns1_top_plate_link" />
+      <child link="ns1_rear_laser_mount" />
     </joint>
   </xacro:if>
 
@@ -213,11 +213,11 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
   <!-- add the intel realsense to the sensor arch if needed -->
   <xacro:if value="$(arg realsense_enabled)">
-    <link name="ns0_realsense_mountpoint"/>
+    <link name="ns1_realsense_mountpoint"/>
     <joint name="realsense_mountpoint_joint" type="fixed">
       <origin xyz="$(arg realsense_xyz)" rpy="$(arg realsense_rpy)" />
-      <parent link="ns0_$(arg realsense_mount)"/>
-      <child link="ns0_realsense_mountpoint" />
+      <parent link="ns1_$(arg realsense_mount)"/>
+      <child link="ns1_realsense_mountpoint" />
     </joint>
     <xacro:intel_realsense_mount prefix="camera" topic="realsense" parent_link="realsense_mountpoint"/>
   </xacro:if>

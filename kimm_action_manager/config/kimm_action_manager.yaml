@@ -1,14 +1,14 @@
 basic_husky_franka_controller:
     type: kimm_action_manager/BasicHuskyFrankaController
-    arm_id: ns0_panda
+    arm_id: ns1_panda
     joint_names:
-        - ns0_panda_joint1
-        - ns0_panda_joint2
-        - ns0_panda_joint3
-        - ns0_panda_joint4
-        - ns0_panda_joint5
-        - ns0_panda_joint6
-        - ns0_panda_joint7
+        - ns1_panda_joint1
+        - ns1_panda_joint2
+        - ns1_panda_joint3
+        - ns1_panda_joint4
+        - ns1_panda_joint5
+        - ns1_panda_joint6
+        - ns1_panda_joint7
     # Configure the initial defaults for the collision behavior reflexes.
     collision_config:
         lower_torque_thresholds_acceleration: [40.0, 40.0, 40.0, 40.0, 30.0, 30.0, 30.0]  # [Nm]

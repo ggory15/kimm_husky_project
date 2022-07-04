@@ -14,7 +14,6 @@ namespace kimm_action_manager
     bool BasicHuskyFrankaController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& node_handle)
     {
         node_handle.getParam("/robot_group", group_name_);
-        ROS_WARN_STREAM(group_name_);
 
         // husky
         husky_ctrl_pub_.init(node_handle, "/" + group_name_ + "/husky/cmd_vel", 4);
@@ -63,7 +62,7 @@ namespace kimm_action_manager
         }
         try {
             state_handle_ = std::make_unique<franka_hw::FrankaStateHandle>(
-                state_interface->getHandle("ns0_panda_robot"));
+                state_interface->getHandle(arm_id + "_robot"));
         } catch (hardware_interface::HardwareInterfaceException& ex) {
             ROS_ERROR_STREAM(
                 "ForceExampleController: Exception getting state handle from interface: " << ex.what());
@@ -227,7 +226,6 @@ namespace kimm_action_manager
             slam_lpf_prev_ = slam_lpf_;  
         }
         catch (tf::TransformException ex){
-            ROS_WARN_STREAM("no slam");
             isslam_ = false;
         }
 

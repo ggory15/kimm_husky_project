@@ -1,6 +1,6 @@
-odom_frame: ns0_odom
-base_link_frame: ns0_base_link
-world_frame: ns0_odom
+odom_frame: ns1_odom
+base_link_frame: ns1_base_link
+world_frame: ns1_odom
 
 two_d_mode: true
 

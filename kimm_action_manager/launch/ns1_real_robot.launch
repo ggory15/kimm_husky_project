@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <arg name="robot_ip" default="192.168.10.202" />
+  <arg name="load_gripper" default="true" />
+  <param name="robot_group" type="string" value="ns1"/>
+
+  <group ns ="ns1">
+    <param name="issimulation" type="bool" value="false"/>
+
+    <include file="$(find franka_control)/launch/franka_control.launch" >
+      <arg name="robot_ip" value="$(arg robot_ip)" />
+      <arg name="load_gripper" value="$(arg load_gripper)" />
+    </include>
+    <param name="robot_group" type="string" value="ns1"/>
+    
+    <param name="urdf_path" type="string" value="$(find husky_description)"/>
+    <param name="urdf_name" type="string" value="/husky_single/husky_panda_hand_free.urdf"/>
+    <param name="gui_urdf_path" type="string" value="$(find husky_description)"/>
+    <param name="gui_urdf_name" type="string" value="/husky_single/husky_panda_rviz_ns1.urdf"/>
+    <arg name="description_name"           default="robot_description"/>
+    <arg name="description_file"           default="$(find husky_description)/husky_single/husky_panda_rviz_ns1.urdf"/>
+    <param name="$(arg description_name)" textfile="$(arg description_file)"/>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true">
+			<param name="publish_frequency" value="100" />
+			<param name="rate" value="100" />
+		</node>
+
+    
+    
+    
+    
+    <rosparam command="load" file="$(find kimm_action_manager)/config/kimm_action_manager.yaml" />
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="basic_husky_franka_controller"/>
+    
+  </group>
+
+    
+    
+</launch>
