@@ -33,9 +33,9 @@
     
     <rosparam command="load" file="$(find kimm_action_manager)/config/kimm_action_manager.yaml" />
     <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="basic_husky_franka_controller"/>
-    
   </group>
-
+  <include file="$(find kimm_husky_viz)/launch/view_robot_ns1.launch"/>
+  
     
     
 </launch>

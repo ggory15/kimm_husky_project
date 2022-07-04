@@ -4,7 +4,8 @@ import rospy
 import actionlib
 import kimm_action_manager.msg
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import Pose, PoseStamped, PoseArray
+from geometry_msgs.msg import Pose, PoseStamped, PoseArray, PoseWithCovarianceStamped
+from std_msgs.msg import String
 from std_msgs.msg import Float32MultiArray
 import numpy as np
 import importlib, pkgutil
@@ -12,6 +13,9 @@ import threading
 import cmd, sys, os
 import copy
 from std_msgs.msg import Bool
+from slam_toolbox_msgs.srv import SaveMap, SerializePoseGraph, DeserializePoseGraph
+import subprocess, signal, os, inspect, time
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -43,7 +47,53 @@ class ControlSuiteShell(cmd.Cmd):
 
         self.gravity_pub = rospy.Publisher('/ns1/basic_husky_franka_controller/kimm_action_manager/gravity_ctrl', Bool, queue_size=1)
         self.gravity = True
-    
+        self.group_name = "ns0"
+        # rospy.wait_for_service('/ns1/slam_toolbox/save_map')
+        # rospy.wait_for_service('/ns1/slam_toolbox/serialize_map')
+        # self.initial_pose_sub = rospy.Subscriber("/initialpose", PoseWithCovarianceStamped, self.InitCallback)
+        # self.initial_pose_pub = rospy.Publisher(self.group_name + "/initialpose", PoseWithCovarianceStamped, queue_size=1)
+        self.movebase_sub = rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.moveCallback)
+        self.movebase_ns0_pub = rospy.Publisher("/ns0/husky/move_base/move_base_simple/goal", PoseStamped, queue_size=1)
+        self.movebase_ns1_pub = rospy.Publisher("/ns1/husky/move_base/move_base_simple/goal", PoseStamped, queue_size=1)
+
+    def InitCallback(self, msg):
+        # self.initial_pose_pub.publish(msg)
+        a=1
+
+    def moveCallback(self, msg):
+        if (self.group_name == "ns0"):
+            self.movebase_ns0_pub.publish(msg)
+        if (self.group_name == "ns1"):
+            self.movebase_ns1_pub.publish(msg)
+        
+            
+    def do_mapsave(self, arg):
+        'Save the map'
+        # save_map = rospy.ServiceProxy('/ns1/slam_toolbox/save_map', SaveMap)
+        # map_name = String()
+        # map_name.data = "kimm_241_map"
+        # resp1 = save_map(map_name)
+        # print("done saving map")
+        self.savemap = subprocess.Popen("rosrun map_server map_saver -f ~/.ros/kimm_241_map", stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
+        serialize_map = rospy.ServiceProxy('/ns1/slam_toolbox/serialize_map', SerializePoseGraph)
+        map_name = "kimm_241_map"
+        resp1 = serialize_map(map_name)
+        print("done serialize map")
+
+    def do_changegroup(self, arg):
+        if (len(arg) > 0):
+            if (int(arg) == 0):
+                self.group_name = "ns0"
+            elif (int(arg)==1):
+                self.group_name = "ns1"
+            else:
+                self.group_name = "ns0"
+        else:
+            self.group_name = "ns0"
+
+        print ("Current Group is")
+        print (self.group_name)
+
     def do_home(self, arg):
         'Go to the home position using joint posture ctrl'
         goal = kimm_action_manager.msg.JointPostureGoal
@@ -75,14 +125,14 @@ class ControlSuiteShell(cmd.Cmd):
         goal.duration = 10.0
 
         goal.qr_pose = Pose()
-        goal.qr_pose.position.x = 1.19
-        goal.qr_pose.position.y = 0.45
+        goal.qr_pose.position.x = 1.35
+        goal.qr_pose.position.y = -0.15
         goal.qr_pose.position.z = 0.2
 
         goal.qr_pose.orientation.x = 0.
         goal.qr_pose.orientation.y = 0.
-        goal.qr_pose.orientation.z = 0.22
-        goal.qr_pose.orientation.w = 0.97
+        goal.qr_pose.orientation.z = 0.08
+        goal.qr_pose.orientation.w = 0.99
 
         goal.target_pose = Pose()
         goal.target_pose.position.x = 0.15
@@ -177,6 +227,8 @@ class ControlSuiteShell(cmd.Cmd):
     
 
     def do_quit(self, arg):
+        os.killpg(os.getpgid(self.savemap.pid), signal.SIGTERM)
+
         return True
 
 if __name__ == '__main__':
